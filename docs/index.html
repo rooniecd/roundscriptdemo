@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FactCheck App</title>
+  <link rel="stylesheet" crossorigin href="/roundscriptdemo/assets/index-BPSKSIQE.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hdr">
+      <h1>FactCheck Search</h1>
+      <p class="sub">Enter a claim or topic and get fact-check reports with auto-generated short video scripts.</p>
+    </header>
+
+    <section class="card">
+      <form id="searchForm">
+        <label for="q">Claim or topic</label>
+        <input id="q" name="q" type="text" placeholder="Ex: Cristiano Ronaldo signed with..." required />
+
+        <div class="row">
+          <label for="lang">Language (optional)</label>
+          <select id="lang" name="lang">
+            <option value="">Auto</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn">Search fact-checks</button>
+      </form>
+    </section>
+
+    <section id="results" class="card hide"></section>
+    <section id="script" class="card hide"></section>
+
+    <footer class="ftr">
+      <small>© 2025 FactCheck App</small>
+    </footer>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>
