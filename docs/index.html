@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoundScript — Fact-Checked Video Script Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="wrap">
+    <h1>RoundScript</h1>
+    <p class="subtitle">Turn fact-checked news into ready-to-read video scripts.</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Search a topic or claim</h2>
+      <form id="searchForm">
+        <input id="query" type="text" placeholder="e.g., Electric vehicles cause more fires than gas cars" required />
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+          <option value="fr">Français</option>
+        </select>
+        <button type="submit">Search & Generate</button>
+      </form>
+      <p id="status"></p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Fact-check results</h3>
+        <ul id="results"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Generated video script</h3>
+        <textarea id="scriptOut" rows="22" spellcheck="false"></textarea>
+        <div class="row">
+          <button id="copyBtn" type="button">Copy Script</button>
+          <button id="downloadBtn" type="button">Download .txt</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <small>Built with the Google Fact Check Tools API • This is a student/internship demo.</small>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
