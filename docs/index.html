@@ -7,14 +7,26 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="wrap">
-    <h1>RoundScript</h1>
-    <p class="subtitle">Turn fact-checked news into ready-to-read video scripts.</p>
+  <!-- Header / Magazine-style brand + nav -->
+  <header class="wrap site">
+    <div class="brand">
+      <h1>RoundScript</h1>
+      <span class="tagline">Authenticity &amp; Clarity for your video scripts</span>
+    </div>
+    <nav class="navbar">
+      <a href="#">Explainer</a>
+      <a href="#">Politics</a>
+      <a href="#">Health</a>
+      <a href="#">Technology</a>
+      <a href="#">Business</a>
+      <a href="#">Gender</a>
+    </nav>
   </header>
 
   <main class="wrap">
-    <section class="card">
-      <h2>Search a topic or claim</h2>
+    <!-- Search card -->
+    <section class="section">
+      <h2 class="section-title"><span class="dot"></span> Search a topic or claim</h2>
       <form id="searchForm">
         <input id="query" type="text" placeholder="e.g., Electric vehicles cause more fires than gas cars" required />
         <select id="lang">
@@ -23,32 +35,78 @@
           <option value="pt">Português</option>
           <option value="fr">Français</option>
         </select>
-        <button type="submit">Search & Generate</button>
+        <button type="submit">Search &amp; Generate</button>
       </form>
       <p id="status"></p>
     </section>
 
+    <!-- Results + Script panels -->
     <section class="grid">
-      <div class="card">
-        <h3>Fact-check results</h3>
+      <div class="section">
+        <h2 class="section-title"><span class="dot"></span> Fact-check results</h2>
         <ul id="results"></ul>
       </div>
 
-      <div class="card">
-        <h3>Generated video script</h3>
+      <div class="section">
+        <h2 class="section-title"><span class="dot"></span> Generated video script</h2>
         <textarea id="scriptOut" rows="22" spellcheck="false"></textarea>
         <div class="row">
           <button id="copyBtn" type="button">Copy Script</button>
-          <button id="downloadBtn" type="button">Download .txt</button>
+          <button id="downloadBtn" type="button" class="secondary">Download .txt</button>
         </div>
       </div>
     </section>
+
+    <!-- Optional trending grid (static placeholders you can swap later)
+    <section class="section">
+      <h2 class="section-title"><span class="dot"></span> Trending</h2>
+      <div class="grid">
+        <article class="card">
+          <img class="thumb" src="https://via.placeholder.com/800x450" alt="">
+          <div class="content">
+            <div class="meta">
+              <span class="badge">Explainer</span>
+              <span>Oct 10, 2025</span>
+            </div>
+            <h3><a href="#">Seven Ways To Fact-Check Viral News Without Being A Journalist</a></h3>
+            <div class="byline">By RoundScript • 3 min read</div>
+          </div>
+        </article>
+        <article class="card">
+          <img class="thumb" src="https://via.placeholder.com/800x450" alt="">
+          <div class="content">
+            <div class="meta">
+              <span class="badge">Technology</span>
+              <span>Oct 09, 2025</span>
+            </div>
+            <h3><a href="#">What the latest AI fact-checkers get right—and wrong</a></h3>
+            <div class="byline">By RoundScript • 4 min read</div>
+          </div>
+        </article>
+        <article class="card">
+          <img class="thumb" src="https://via.placeholder.com/800x450" alt="">
+          <div class="content">
+            <div class="meta">
+              <span class="badge">Health</span>
+              <span>Oct 08, 2025</span>
+            </div>
+            <h3><a href="#">Separating rumor from reality during outbreaks</a></h3>
+            <div class="byline">By RoundScript • 5 min read</div>
+          </div>
+        </article>
+      </div>
+    </section>
+    -->
+
   </main>
 
-  <footer class="wrap">
-    <small>Built with the Google Fact Check Tools API • This is a student/internship demo.</small>
+  <footer>
+    <div class="wrap">
+      <small>Built with the Google Fact Check Tools API • Student/Intern demo.</small>
+    </div>
   </footer>
 
+  <!-- Keep your existing JS files; this page only changes layout/styling -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
