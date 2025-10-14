@@ -1,62 +1,52 @@
-// RoundScript frontend logic with detailed comments for clarity
-
-async function fetchFactChecks(query, lang) {
-  const url = new URL('/api/search', API_BASE);
-  url.searchParams.set('q', query);
-  if (lang) url.searchParams.set('lang', lang);
-  const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
-}
-
-// Generate a short-form video script from normalized fact-check results
-function buildScript(topic, normalized) {
-  const bullets = normalized.results.slice(0, 5).map((r, i) => {
-    const rating = r.rating ? ` (${r.rating})` : "";
-    const pub = r.reviewPublisher ? ` — ${r.reviewPublisher}` : "";
-    const link = r.reviewUrl ? `\nSource: ${r.reviewUrl}` : "";
-    return `- ${r.title || r.text}${rating}${pub}${link}`;
-  }).join("\n");
-
-  return [
-`HOOK: ${topic}? Let's check what the fact-checkers found.`,
-"\nCONTEXT (5-8s):",
-"• Here's the claim and what independent reviewers say.",
-"",
-"FINDINGS (15-30s):",
-bullets,
-"",
-"NUANCE (5-10s):",
-"• Ratings vary by context, date, and wording. Always read the full review.",
-"",
-"OUTRO (3-5s):",
-"Thanks for watching. Like & follow for more verified explainers."
-  ].join("\n");
+// Front logic with Nigeria mode + "Related Article" labels
+function api(base, path, params) {
+  const url = new URL(path, base);
+  if (params) Object.entries(params).forEach(([k, v]) => v!=null && url.searchParams.set(k, v));
+  return fetch(url.toString(), { headers: { "Accept": "application/json" }}).then(r => {
+    if (!r.ok) throw new Error("API " + r.status);
+    return r.json();
+  });
 }
 
 function renderResults(listEl, data) {
   listEl.innerHTML = "";
-  if (!data.results || !data.results.length) {
-    listEl.innerHTML = "<li>No results found. Try rephrasing or another language.</li>";
+  const results = data.results || [];
+  if (!results.length) {
+    listEl.innerHTML = "<li>No results. Try another variant (e.g., add 'fact-check', 'false', or use Nigeria mode).</li>";
     return;
   }
-  for (const r of data.results) {
+  for (const r of results) {
     const li = document.createElement("li");
-    const title = r.title || r.text || "Untitled";
+    const rating = r.rating ? `<strong>${r.rating}</strong>` : `<em>Related Article</em>`;
     const meta = [
+      r.reviewPublisher ? `Source: ${r.reviewPublisher}` : null,
       r.claimant ? `Claimant: ${r.claimant}` : null,
-      r.claimDate ? `Claim date: ${r.claimDate}` : null,
-      r.rating ? `Rating: ${r.rating}` : null,
-      r.reviewPublisher ? `Publisher: ${r.reviewPublisher}` : null
+      r.claimDate ? `Date: ${r.claimDate}` : null
     ].filter(Boolean).join(" • ");
-
     li.innerHTML = `
-      <strong>${title}</strong><br>
-      <small>${meta}</small><br>
-      ${r.reviewUrl ? `<a href="${r.reviewUrl}" target="_blank" rel="noopener">Open review</a>` : ""}
+      <div>${rating}</div>
+      <div><strong>${r.title || r.text || "Untitled"}</strong></div>
+      <div><small>${meta}</small></div>
+      ${r.reviewUrl ? `<a href="${r.reviewUrl}" target="_blank" rel="noopener">Open</a>` : ""}
     `;
     listEl.appendChild(li);
   }
+}
+
+function buildScript(topic, data) {
+  const lines = (data.results || []).slice(0,8).map(r => {
+    const tag = r.rating ? `[${r.rating}]` : `[Related]`;
+    const pub = r.reviewPublisher ? ` — ${r.reviewPublisher}` : "";
+    return `- ${tag} ${r.title || r.text}${pub}${r.reviewUrl ? `\n  ${r.reviewUrl}` : ""}`;
+  });
+  return [
+    `HOOK: ${topic}? Let's verify with trusted sources.`,
+    "",
+    "FINDINGS:",
+    ...lines,
+    "",
+    "NOTE: Some items may be related context (no formal verdict). Always read full sources."
+  ].join("\n");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -69,34 +59,66 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyBtn = document.getElementById("copyBtn");
   const downloadBtn = document.getElementById("downloadBtn");
 
+  let nigeriamode = document.getElementById("nigeriaMode");
+  if (!nigeriamode) {
+    const p = document.createElement("p");
+    p.style.margin = "8px 0";
+    p.innerHTML = `<label><input id="nigeriaMode" type="checkbox"> Nigeria mode (prefer local fact-checkers)</label>`;
+    form.parentElement.insertBefore(p, form.nextSibling);
+    nigeriamode = document.getElementById("nigeriaMode");
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const query = q.value.trim();
     if (!query) return;
-
-    status.textContent = "Searching…";
-    results.innerHTML = "";
     scriptOut.value = "";
+    results.innerHTML = "";
+    status.textContent = "Searching…";
 
     try {
-      const data = await fetchFactChecks(query, lang.value);
+      let data;
+      if (nigeriamode.checked) {
+        data = await api(API_BASE, "/api/ng-search", { q: query });
+        if (!data.results || data.results.length === 0) {
+          const g = await api(API_BASE, "/api/search", { q: query, lang: lang.value || "auto" });
+          data = g;
+        }
+      } else {
+        data = await api(API_BASE, "/api/search", { q: query, lang: lang.value || "auto" });
+        if (!data.results || data.results.length === 0) {
+          const variants = [
+            `"${query}"`, `${query} fact-check`, `${query} false`,
+            `${query} misinformation`, `${query} verificación`
+          ];
+          for (const v of variants) {
+            const g2 = await api(API_BASE, "/api/search", { q: v, lang: "auto" });
+            if (g2.results && g2.results.length) { data = g2; break; }
+          }
+          if (!data.results || !data.results.length) {
+            const ng = await api(API_BASE, "/api/ng-search", { q: query });
+            if (ng.results && ng.results.length) data = ng;
+          }
+        }
+      }
+
       renderResults(results, data);
       scriptOut.value = buildScript(query, data);
-      status.textContent = `Found ${data.results?.length || 0} reviews`;
+      status.textContent = `Found ${data.results?.length || 0} items`;
     } catch (err) {
       console.error(err);
-      status.textContent = "Error fetching results. Check API_BASE in config.js and your Worker.";
+      status.textContent = "Error fetching results. Check your API_BASE or CORS.";
     }
   });
 
-  copyBtn.addEventListener("click", async () => {
+  copyBtn?.addEventListener("click", async () => {
     if (!scriptOut.value) return;
     try { await navigator.clipboard.writeText(scriptOut.value); } catch {}
     copyBtn.textContent = "Copied!";
-    setTimeout(() => copyBtn.textContent = "Copy Script", 1200);
+    setTimeout(()=>copyBtn.textContent="Copy Script", 1200);
   });
 
-  downloadBtn.addEventListener("click", () => {
+  downloadBtn?.addEventListener("click", () => {
     if (!scriptOut.value) return;
     const blob = new Blob([scriptOut.value], { type: "text/plain" });
     const a = document.createElement("a");
