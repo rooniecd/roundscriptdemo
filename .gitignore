@@ -1,2 +1,20 @@
-# Local Netlify folder
-.netlify
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+package-lock.json
+
+# Cloudflare / Wrangler
+.wrangler/
+**/.wrangler/
+.dev.vars
+
+# Builds / caches
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,158 @@
+/* RoundScript — Theme inspirado en roundcheck.com.ng (magazine limpio, fondo claro)
+   Drop-in: reemplaza /docs/styles.css
+*/
+
+:root{
+  --bg: #ffffff;
+  --text: #0b1220;
+  --muted:#475467;
+  --soft:#f2f4f7;
+  --border:#e5e7eb;
+  --brand:#0ea5b7;
+  --brand-2:#14b8a6;
+  --link:#0ea5b7;
+  --card-bg:#ffffff;
+  --shadow: 0 10px 24px rgba(16,24,40,.06);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+a{color:var(--link); text-decoration:none}
+a:hover{text-decoration:underline}
+
+.wrap{max-width:1180px;margin:0 auto;padding:20px}
+
+header.site{
+  padding:18px 0 10px;
+  border-bottom:1px solid var(--border);
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+}
+.brand h1{
+  margin:0; font-size:clamp(22px,2.2vw,30px); letter-spacing:.2px;
+}
+.brand .tagline{color:var(--muted); font-size:14px}
+
+.navbar{
+  display:flex; gap:14px; flex-wrap:wrap; margin-top:12px;
+}
+.navbar a{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 12px; border-radius:999px;
+  background:var(--soft); color:var(--text);
+  border:1px solid var(--border);
+  font-size:14px; font-weight:600;
+}
+.navbar a:hover{
+  background:#eaf6f8; border-color:#d2eef2;
+}
+
+.section-title{
+  margin:22px 0 12px; color:#101828; font-size:18px; letter-spacing:.3px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-title .dot{
+  width:8px; height:8px; border-radius:50%; background:var(--brand);
+}
+
+.grid{
+  display:grid; gap:18px;
+  grid-template-columns: 1fr 1fr;
+}
+@media (min-width: 980px){
+  .grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 680px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.section{
+  background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);
+}
+
+.card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  display:flex; flex-direction:column; min-height:100%;
+}
+.card .thumb{
+  aspect-ratio: 16/9;
+  background:#eaeef3;
+  display:block; width:100%;
+  object-fit:cover;
+}
+.card .content{ padding:14px 14px 16px; display:flex; flex-direction:column; gap:8px }
+.card .meta{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  font-size:12px; color:var(--muted);
+}
+.badge{
+  display:inline-block; padding:4px 10px; border-radius:999px;
+  background:#eaf6f8; color:#075a64; border:1px solid #cfecee; font-weight:700; font-size:12px;
+}
+.card h3{
+  font-size:16px; line-height:1.35; margin:0;
+}
+.card h3 a{ color:#111827; text-decoration:none }
+.card h3 a:hover{ color:#0f5f6a; text-decoration:underline }
+.card .byline{
+  margin-top:auto; display:flex; align-items:center; gap:8px;
+  color:var(--muted); font-size:12px;
+}
+
+ul#results{
+  list-style:none; padding:0; margin:0; display:grid; gap:10px;
+}
+ul#results li{
+  padding:12px 14px; border:1px solid var(--border); border-radius:12px; background:#fff;
+}
+
+form{
+  display:grid; grid-template-columns:1fr 140px 140px; gap:10px; align-items:center;
+}
+input, select, button, textarea{
+  border-radius:12px; border:1px solid var(--border); background:#fff; color:var(--text);
+  padding:12px 14px; font-size:15px; outline:none;
+}
+input:focus, select:focus, textarea:focus{
+  border-color:#bfe9ee; box-shadow:0 0 0 3px rgba(14,165,183,.15);
+}
+button{
+  background: linear-gradient(180deg, var(--brand), var(--brand-2));
+  color:#022c34; font-weight:700; border:0; cursor:pointer;
+}
+button:hover{ filter:brightness(1.03) saturate(1.05) }
+button:active{ transform: translateY(1px) }
+button.secondary{
+  background:#fff;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+#status{ color:var(--muted); min-height:1.2em }
+
+textarea#scriptOut{
+  width:100%; min-height:340px; resize:vertical;
+  background:#fff;
+}
+
+footer{
+  margin-top:26px; padding:24px 0 40px; text-align:center; color:var(--muted);
+  border-top:1px solid var(--border);
+}
+
+.row{ display:flex; gap:10px; flex-wrap:wrap }
+.hidden{ display:none !important }
+.container{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow) }
