@@ -1,5 +1,4 @@
-// Optional front enhancement. Replace only if you want.
-// It labels items with empty rating as "Related Article" and includes a Nigeria toggle.
+// Frontend: source selector and params to /api/ng-search
 function api(base, path, params) {
   const url = new URL(path, base);
   if (params) Object.entries(params).forEach(([k, v]) => v!=null && url.searchParams.set(k, v));
@@ -13,7 +12,7 @@ function renderResults(listEl, data) {
   listEl.innerHTML = "";
   const results = data.results || [];
   if (!results.length) {
-    listEl.innerHTML = "<li>No results. Try another variant (e.g., add 'fact-check', 'false', or use Nigeria mode).</li>";
+    listEl.innerHTML = "<li>No results. Try 'trusted' or 'Only FactCheckHub'.</li>";
     return;
   }
   for (const r of results) {
@@ -69,6 +68,22 @@ document.addEventListener("DOMContentLoaded", () => {
     nigeriamode = document.getElementById("nigeriaMode");
   }
 
+  let sourceSel = document.getElementById("sourceSel");
+  if (!sourceSel) {
+    const w = document.createElement("p");
+    w.style.margin = "8px 0";
+    w.innerHTML = `
+      <label>Sources: 
+        <select id="sourceSel">
+          <option value="all">All</option>
+          <option value="trusted">Nigeria trusted (FCH/Dubawa/AfricaCheck)</option>
+          <option value="fch">Only FactCheckHub</option>
+        </select>
+      </label>`;
+    form.parentElement.insertBefore(w, form.nextSibling);
+    sourceSel = document.getElementById("sourceSel");
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     let query = q.value.trim();
@@ -81,8 +96,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       let data;
+      const srcMode = sourceSel?.value || "all";
+
       if (nigeriamode.checked) {
-        data = await api(API_BASE, "/api/ng-search", { q: query });
+        const params = { q: query };
+        if (srcMode === "trusted") params.mode = "trusted";
+        if (srcMode === "fch") params.host = "factcheckhub.com";
+
+        data = await api(API_BASE, "/api/ng-search", params);
         if (!data.results || data.results.length === 0) {
           const g = await api(API_BASE, "/api/search", { q: query, lang: lang.value || "auto" });
           data = g;
@@ -99,7 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (g2.results && g2.results.length) { data = g2; break; }
           }
           if (!data.results || !data.results.length) {
-            const ng = await api(API_BASE, "/api/ng-search", { q: query });
+            const params = { q: query };
+            if (srcMode === "trusted") params.mode = "trusted";
+            if (srcMode === "fch") params.host = "factcheckhub.com";
+            const ng = await api(API_BASE, "/api/ng-search", params);
             if (ng.results && ng.results.length) data = ng;
           }
         }
