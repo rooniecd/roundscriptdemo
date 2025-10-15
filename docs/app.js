@@ -1,4 +1,5 @@
-// Front logic with Nigeria mode + "Related Article" labels
+// Optional front enhancement. Replace only if you want.
+// It labels items with empty rating as "Related Article" and includes a Nigeria toggle.
 function api(base, path, params) {
   const url = new URL(path, base);
   if (params) Object.entries(params).forEach(([k, v]) => v!=null && url.searchParams.set(k, v));
@@ -70,8 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const query = q.value.trim();
+    let query = q.value.trim();
     if (!query) return;
+    query = query.replace(/^asus\b/i, "ASUU");
+
     scriptOut.value = "";
     results.innerHTML = "";
     status.textContent = "Searching…";
