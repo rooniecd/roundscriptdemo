@@ -1,157 +1,23 @@
-// Frontend: source selector and params to /api/ng-search
-function api(base, path, params) {
-  const url = new URL(path, base);
-  if (params) Object.entries(params).forEach(([k, v]) => v!=null && url.searchParams.set(k, v));
-  return fetch(url.toString(), { headers: { "Accept": "application/json" }}).then(r => {
-    if (!r.ok) throw new Error("API " + r.status);
-    return r.json();
-  });
-}
-
-function renderResults(listEl, data) {
-  listEl.innerHTML = "";
-  const results = data.results || [];
-  if (!results.length) {
-    listEl.innerHTML = "<li>No results. Try 'trusted' or 'Only FactCheckHub'.</li>";
-    return;
-  }
-  for (const r of results) {
-    const li = document.createElement("li");
-    const rating = r.rating ? `<strong>${r.rating}</strong>` : `<em>Related Article</em>`;
-    const meta = [
-      r.reviewPublisher ? `Source: ${r.reviewPublisher}` : null,
-      r.claimant ? `Claimant: ${r.claimant}` : null,
-      r.claimDate ? `Date: ${r.claimDate}` : null
-    ].filter(Boolean).join(" • ");
-    li.innerHTML = `
-      <div>${rating}</div>
-      <div><strong>${r.title || r.text || "Untitled"}</strong></div>
-      <div><small>${meta}</small></div>
-      ${r.reviewUrl ? `<a href="${r.reviewUrl}" target="_blank" rel="noopener">Open</a>` : ""}
-    `;
-    listEl.appendChild(li);
-  }
-}
-
-function buildScript(topic, data) {
-  const lines = (data.results || []).slice(0,8).map(r => {
-    const tag = r.rating ? `[${r.rating}]` : `[Related]`;
-    const pub = r.reviewPublisher ? ` — ${r.reviewPublisher}` : "";
-    return `- ${tag} ${r.title || r.text}${pub}${r.reviewUrl ? `\n  ${r.reviewUrl}` : ""}`;
-  });
-  return [
-    `HOOK: ${topic}? Let's verify with trusted sources.`,
-    "",
-    "FINDINGS:",
-    ...lines,
-    "",
-    "NOTE: Some items may be related context (no formal verdict). Always read full sources."
-  ].join("\n");
-}
-
+// Frontend with Strict Match checkbox
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("searchForm");
   const q = document.getElementById("query");
-  const lang = document.getElementById("lang");
-  const status = document.getElementById("status");
   const results = document.getElementById("results");
-  const scriptOut = document.getElementById("scriptOut");
-  const copyBtn = document.getElementById("copyBtn");
-  const downloadBtn = document.getElementById("downloadBtn");
-
-  let nigeriamode = document.getElementById("nigeriaMode");
-  if (!nigeriamode) {
-    const p = document.createElement("p");
-    p.style.margin = "8px 0";
-    p.innerHTML = `<label><input id="nigeriaMode" type="checkbox"> Nigeria mode (prefer local fact-checkers)</label>`;
-    form.parentElement.insertBefore(p, form.nextSibling);
-    nigeriamode = document.getElementById("nigeriaMode");
-  }
-
-  let sourceSel = document.getElementById("sourceSel");
-  if (!sourceSel) {
-    const w = document.createElement("p");
-    w.style.margin = "8px 0";
-    w.innerHTML = `
-      <label>Sources: 
-        <select id="sourceSel">
-          <option value="all">All</option>
-          <option value="trusted">Nigeria trusted (FCH/Dubawa/AfricaCheck)</option>
-          <option value="fch">Only FactCheckHub</option>
-        </select>
-      </label>`;
-    form.parentElement.insertBefore(w, form.nextSibling);
-    sourceSel = document.getElementById("sourceSel");
-  }
+  const status = document.getElementById("status");
+  const strictCb = document.createElement("p");
+  strictCb.innerHTML = '<label><input id="strictMatch" type="checkbox" checked> Strict match (AND)</label>';
+  form.parentElement.insertBefore(strictCb, form.nextSibling);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    let query = q.value.trim();
-    if (!query) return;
-    query = query.replace(/^asus\b/i, "ASUU");
-
-    scriptOut.value = "";
     results.innerHTML = "";
-    status.textContent = "Searching…";
-
-    try {
-      let data;
-      const srcMode = sourceSel?.value || "all";
-
-      if (nigeriamode.checked) {
-        const params = { q: query };
-        if (srcMode === "trusted") params.mode = "trusted";
-        if (srcMode === "fch") params.host = "factcheckhub.com";
-
-        data = await api(API_BASE, "/api/ng-search", params);
-        if (!data.results || data.results.length === 0) {
-          const g = await api(API_BASE, "/api/search", { q: query, lang: lang.value || "auto" });
-          data = g;
-        }
-      } else {
-        data = await api(API_BASE, "/api/search", { q: query, lang: lang.value || "auto" });
-        if (!data.results || data.results.length === 0) {
-          const variants = [
-            `"${query}"`, `${query} fact-check`, `${query} false`,
-            `${query} misinformation`, `${query} verificación`
-          ];
-          for (const v of variants) {
-            const g2 = await api(API_BASE, "/api/search", { q: v, lang: "auto" });
-            if (g2.results && g2.results.length) { data = g2; break; }
-          }
-          if (!data.results || !data.results.length) {
-            const params = { q: query };
-            if (srcMode === "trusted") params.mode = "trusted";
-            if (srcMode === "fch") params.host = "factcheckhub.com";
-            const ng = await api(API_BASE, "/api/ng-search", params);
-            if (ng.results && ng.results.length) data = ng;
-          }
-        }
-      }
-
-      renderResults(results, data);
-      scriptOut.value = buildScript(query, data);
-      status.textContent = `Found ${data.results?.length || 0} items`;
-    } catch (err) {
-      console.error(err);
-      status.textContent = "Error fetching results. Check your API_BASE or CORS.";
-    }
-  });
-
-  copyBtn?.addEventListener("click", async () => {
-    if (!scriptOut.value) return;
-    try { await navigator.clipboard.writeText(scriptOut.value); } catch {}
-    copyBtn.textContent = "Copied!";
-    setTimeout(()=>copyBtn.textContent="Copy Script", 1200);
-  });
-
-  downloadBtn?.addEventListener("click", () => {
-    if (!scriptOut.value) return;
-    const blob = new Blob([scriptOut.value], { type: "text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "roundscript_script.txt";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    status.textContent = "Searching...";
+    const query = q.value.trim();
+    const strict = document.getElementById("strictMatch").checked ? "1" : "0";
+    const url = `https://roundscript-api.roundscriptdemo.workers.dev/api/ng-search?q=${encodeURIComponent(query)}&strict=${strict}&host=factcheckhub.com`;
+    const res = await fetch(url);
+    const data = await res.json();
+    results.innerHTML = data.results.map(r => `<li><a href="${r.reviewUrl}" target="_blank">${r.title}</a></li>`).join("");
+    status.textContent = `Found ${data.results.length} results`;
   });
 });
